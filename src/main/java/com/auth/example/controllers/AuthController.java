@@ -10,9 +10,11 @@ import com.auth.example.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/auth")
@@ -20,8 +22,8 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     @Autowired private UserService userService;
-    @Autowired private MyUserDetailsService userDetailsService;
     @Autowired private JwtService jwtService;
+    @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private AuthenticationManager authManager;
 
 
@@ -39,7 +41,7 @@ public class AuthController {
 
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         userService.createUser(user);
         UserDetails userDetails = new MyUserDetails(user);
         String jwt = jwtService.generateToken(userDetails);
