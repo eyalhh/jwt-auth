@@ -32,7 +32,7 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return Jwts.parser()
-                .decryptWith(key)
+                .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -47,7 +47,7 @@ public class JwtService {
 
     public boolean isTokenExpired(String token) {
         return Jwts.parser()
-                .decryptWith(key)
+                .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
