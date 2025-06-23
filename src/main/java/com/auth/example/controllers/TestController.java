@@ -1,5 +1,6 @@
 package com.auth.example.controllers;
 
+import com.auth.example.models.User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
