@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 @Table(name = "users")
 @Slf4j
 @NoArgsConstructor
+@AllArgsConstructor
 @ToString
+@Builder
 public class User {
 
     @Id
