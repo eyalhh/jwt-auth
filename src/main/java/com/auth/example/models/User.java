@@ -17,7 +17,6 @@ import java.util.List;
 public class User {
 
     @Getter
-    @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -29,6 +28,10 @@ public class User {
     @Getter
     @Setter
     private String password;
+
+    @Getter
+    @Setter
+    private Boolean emailValidated;
 
     @Getter
     @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)

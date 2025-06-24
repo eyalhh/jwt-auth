@@ -7,6 +7,7 @@ import com.auth.example.models.User;
 import com.auth.example.services.JwtService;
 import com.auth.example.services.MyUserDetailsService;
 import com.auth.example.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,12 +24,11 @@ public class AuthController {
 
     @Autowired private UserService userService;
     @Autowired private JwtService jwtService;
-    @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private AuthenticationManager authManager;
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
         Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         UserDetails user = (UserDetails) authentication.getPrincipal();
@@ -37,12 +37,19 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) {
+    public ResponseEntity<User> register(@Valid @RequestBody AuthRequest request) {
 
-        User user = User.builder().password(request.getPassword()).email(request.getEmail()).build();
+        User user = User.builder().password(request.getPassword()).email(request.getEmail()).emailValidated(false).build();
         userService.createUser(user);
-        UserDetails userDetails = new MyUserDetails(user);
-        String jwt = jwtService.generateToken(userDetails);
-        return ResponseEntity.ok(new AuthResponse(jwt));
+        return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/validate/{code}")
+    public ResponseEntity<?> validateEmail(@Valid @RequestBody AuthRequest request, @PathVariable String code) {
+        if (code.length() != 6) {
+            return ResponseEntity.badRequest().build();
+        }
+        Integer numericCode = Integer.parseInt(code);
+        return ResponseEntity.ok().build();
     }
 }
