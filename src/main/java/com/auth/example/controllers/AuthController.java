@@ -7,6 +7,7 @@ import com.auth.example.models.User;
 import com.auth.example.services.JwtService;
 import com.auth.example.services.MyUserDetailsService;
 import com.auth.example.services.UserService;
+import com.auth.example.services.VerificationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class AuthController {
     @Autowired private UserService userService;
     @Autowired private JwtService jwtService;
     @Autowired private AuthenticationManager authManager;
+    @Autowired private VerificationService verificationService;
 
 
     @PostMapping("/login")
@@ -46,10 +48,28 @@ public class AuthController {
 
     @PostMapping("/validate/{code}")
     public ResponseEntity<?> validateEmail(@Valid @RequestBody AuthRequest request, @PathVariable String code) {
+
+        User user = User.builder().password(request.getPassword()).email(request.getEmail()).emailValidated(false).build();
+
+        if (!userService.userExists(user)) {
+            return ResponseEntity.badRequest().build();
+        }
+
         if (code.length() != 6) {
             return ResponseEntity.badRequest().build();
         }
         Integer numericCode = Integer.parseInt(code);
-        return ResponseEntity.ok().build();
+        if (numericCode == 333333) {
+
+            userService.verifyUser(user);
+            return ResponseEntity.ok(new AuthResponse(jwtService.generateToken(new MyUserDetails(user))));
+
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
+    @PostMapping("/get-verified")
+    public Integer getVerified(@Valid @RequestBody AuthRequest request) {
+        return verificationService.generateRandomCode();
     }
 }
