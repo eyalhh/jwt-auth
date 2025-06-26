@@ -29,11 +29,10 @@ public class UserService {
         User populatedUser = userRepository.findByIdWithTasks(user.getId()).orElseThrow();
         return populatedUser.getTasks();
     }
-    public void verifyUser(User user) {
-        userRepository.verifyUserByEmail(user.getEmail());
+    public void verifyUserByEmail(String email) {
+        userRepository.verifyUserByEmail(email);
     }
-    public boolean userExists(User user) {
-        User loadedUser = userRepository.findByEmail(user.getEmail()).orElse(null);
-        return loadedUser != null;
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
     }
 }

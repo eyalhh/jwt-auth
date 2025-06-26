@@ -19,7 +19,7 @@ public class EmailVerificationCode {
     private Integer id;
 
     @Column(nullable = false)
-    private Integer token;
+    private Integer code;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
