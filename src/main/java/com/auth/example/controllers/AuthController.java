@@ -43,8 +43,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody AuthRequest request) {
-
+    public ResponseEntity<?> register(@Valid @RequestBody AuthRequest request) {
+        User existingUser = userService.getUserByEmail(request.getEmail());
+        if (existingUser != null) return ResponseEntity.badRequest().build();
         User user = User.builder().password(request.getPassword()).email(request.getEmail()).emailValidated(false).build();
         userService.createUser(user);
         return ResponseEntity.ok(user);
