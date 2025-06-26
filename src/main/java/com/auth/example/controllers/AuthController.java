@@ -69,7 +69,8 @@ public class AuthController {
     }
 
     @PostMapping("/get-verified")
-    public VerifiedResponse getVerified(@Valid @RequestBody VerifiedRequest request) {
-        return new VerifiedResponse(verificationService.generateRandomCode(request.email()));
+    public ResponseEntity<?> getVerified(@Valid @RequestBody VerifiedRequest request) {
+        verificationService.generateRandomCode(request.email());
+        return ResponseEntity.ok().build();
     }
 }

@@ -25,6 +25,7 @@ public class VerificationService {
     private EmailService emailService;
 
     public void generateRandomCode(String email) {
+
         Random random = new Random();
         User user = userService.getUserByEmail(email);
         if (user == null || user.getEmailValidated()) throw new NoSuchElementException();
@@ -33,23 +34,32 @@ public class VerificationService {
                 .code(actualCode)
                 .used(false)
                 .expires_at(OffsetDateTime.now(ZoneOffset.UTC)
-                        .plusMinutes(5)
+                        .plusMinutes(1)
                         .withNano(0))
                 .user(user)
                 .build();
         verificationRepository.save(code);
-        emailService.sendSimpleEmail(email, "!IMPORTANT!: VERIFICATION CODE FOR SIMPLE-AUTH", "Hi your verification code is : " + actualCode.toString());
+        emailService.sendSimpleEmail(email, "##IMPORTANT##: Verification code for simpleAuth", "Hi, your verification code is : " + actualCode.toString());
         return;
-        
+
     }
 
     public Boolean verifyCode(String email, Integer code) {
 
+        User user = userService.getUserByEmail(email);
+        if (user == null || user.getEmailValidated()) return false;
+
         EmailVerificationCode token = verificationRepository.findByEmailAndCode(email, code).orElse(null);
         if (token == null) return false;
+        if (token.getExpires_at().isBefore(OffsetDateTime.now(ZoneOffset.UTC))) {
+            return false;
+        }
         verificationRepository.delete(token);
         userService.verifyUserByEmail(email);
         return true;
 
+    }
+    public EmailVerificationCode findByEmailAndCode(String email, Integer code) {
+        return verificationRepository.findByEmailAndCode(email, code).orElse(null);
     }
 }
