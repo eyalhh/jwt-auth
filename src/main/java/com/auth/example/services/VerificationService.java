@@ -26,9 +26,19 @@ public class VerificationService {
 
     public void generateRandomCode(String email) {
 
+        // first of all delete expired tokens for that user.
+        verificationRepository.deleteExpiredTokensByEmail(email, OffsetDateTime.now(ZoneOffset.UTC));
+
+        // check if there already is a code for the given user
+        if (verificationRepository.existsUnexpiredTokenByEmail(email, OffsetDateTime.now(ZoneOffset.UTC))) {
+            throw new NoSuchElementException();
+        }
         Random random = new Random();
+
+        // check if user exists
         User user = userService.getUserByEmail(email);
         if (user == null || user.getEmailValidated()) throw new NoSuchElementException();
+
         Integer actualCode = 100000 + random.nextInt(900000);
         EmailVerificationCode code = EmailVerificationCode.builder()
                 .code(actualCode)
@@ -40,7 +50,6 @@ public class VerificationService {
                 .build();
         verificationRepository.save(code);
         emailService.sendSimpleEmail(email, "##IMPORTANT##: Verification code for simpleAuth", "Hi, your verification code is : " + actualCode.toString());
-        return;
 
     }
 
@@ -51,7 +60,8 @@ public class VerificationService {
 
         EmailVerificationCode token = verificationRepository.findByEmailAndCode(email, code).orElse(null);
         if (token == null) return false;
-        if (token.getExpires_at().isBefore(OffsetDateTime.now(ZoneOffset.UTC))) {
+        if (isExpired(token)) {
+            verificationRepository.delete(token);
             return false;
         }
         verificationRepository.delete(token);
@@ -61,5 +71,9 @@ public class VerificationService {
     }
     public EmailVerificationCode findByEmailAndCode(String email, Integer code) {
         return verificationRepository.findByEmailAndCode(email, code).orElse(null);
+    }
+
+    public Boolean isExpired(EmailVerificationCode token) {
+        return token.getExpires_at().isBefore(OffsetDateTime.now(ZoneOffset.UTC));
     }
 }

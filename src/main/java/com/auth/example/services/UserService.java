@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -26,8 +27,8 @@ public class UserService {
         return populatedUser;
     }
     public List<Task> getUserTasks(User user) {
-        User populatedUser = userRepository.findByIdWithTasks(user.getId()).orElseThrow();
-        return populatedUser.getTasks();
+        User populatedUser = userRepository.findByIdWithTasks(user.getId()).orElse(null);
+        return populatedUser == null ? new ArrayList<Task>() : populatedUser.getTasks();
     }
     public void verifyUserByEmail(String email) {
         userRepository.verifyUserByEmail(email);

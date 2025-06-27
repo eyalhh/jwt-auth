@@ -69,7 +69,7 @@ public class AuthController {
         return ResponseEntity.badRequest().build();
     }
 
-    @PostMapping("/get-verified")
+    @PostMapping("/validate")
     public ResponseEntity<?> getVerified(@Valid @RequestBody VerifiedRequest request) {
         verificationService.generateRandomCode(request.email());
         return ResponseEntity.ok().build();
