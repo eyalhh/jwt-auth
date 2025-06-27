@@ -1,12 +1,10 @@
 package com.auth.example.controllers;
 
-import com.auth.example.models.AuthRequest;
-import com.auth.example.models.AuthResponse;
-import com.auth.example.models.MyUserDetails;
-import com.auth.example.models.User;
+import com.auth.example.models.*;
 import com.auth.example.services.JwtService;
 import com.auth.example.services.MyUserDetailsService;
 import com.auth.example.services.UserService;
+import com.auth.example.services.VerificationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,31 +23,55 @@ public class AuthController {
     @Autowired private UserService userService;
     @Autowired private JwtService jwtService;
     @Autowired private AuthenticationManager authManager;
+    @Autowired private VerificationService verificationService;
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request) {
+
+        // authenticate the user
         Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        UserDetails user = (UserDetails) authentication.getPrincipal();
-        String jwt = jwtService.generateToken(user);
+        MyUserDetails userDetails = (MyUserDetails) authentication.getPrincipal();
+        User user = userDetails.getUser();
+
+        if (!user.getEmailValidated()) {
+            return ResponseEntity.badRequest().build();
+        }
+        String jwt = jwtService.generateToken(userDetails);
         return ResponseEntity.ok(new AuthResponse(jwt));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody AuthRequest request) {
-
+    public ResponseEntity<?> register(@Valid @RequestBody AuthRequest request) {
+        User existingUser = userService.getUserByEmail(request.getEmail());
+        if (existingUser != null) return ResponseEntity.badRequest().build();
         User user = User.builder().password(request.getPassword()).email(request.getEmail()).emailValidated(false).build();
         userService.createUser(user);
         return ResponseEntity.ok(user);
     }
 
     @PostMapping("/validate/{code}")
-    public ResponseEntity<?> validateEmail(@Valid @RequestBody AuthRequest request, @PathVariable String code) {
-        if (code.length() != 6) {
+    public ResponseEntity<?> validateEmail(@Valid @RequestBody VerifiedRequest request, @PathVariable String code) {
+
+
+        if (userService.getUserByEmail(request.email()) == null|| code.length() != 6) {
             return ResponseEntity.badRequest().build();
         }
+
         Integer numericCode = Integer.parseInt(code);
+
+        if (verificationService.verifyCode(request.email(), numericCode)) {
+            User user = User.builder().email(request.email()).build();
+            String jwt = jwtService.generateToken(new MyUserDetails(user));
+            return ResponseEntity.ok(new AuthResponse(jwt));
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
+    @PostMapping("/validate")
+    public ResponseEntity<?> getVerified(@Valid @RequestBody VerifiedRequest request) {
+        verificationService.generateRandomCode(request.email());
         return ResponseEntity.ok().build();
     }
 }
