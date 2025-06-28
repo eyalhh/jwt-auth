@@ -16,24 +16,27 @@ public class MyOAuth2UserService implements OAuth2UserService<OAuth2UserRequest,
 
     @Autowired private UserRepository userRepository;
 
+
     @Override
     public OAuth2User loadUser(OAuth2UserRequest request) {
+        System.out.println(1);
         OAuth2User oauth2User = new DefaultOAuth2UserService().loadUser(request);
+
+        String provider = request.getClientRegistration().getRegistrationId();
 
         Map<String, Object> attributes = oauth2User.getAttributes();
         String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
 
-        // Check if user exists, else create
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = User.builder()
                     .email(email)
-                    .password(null)  // or generate something dummy
+                    .password("oauth2")
+                    .provider(provider)
                     .emailValidated(true)
                     .build();
             return userRepository.save(newUser);
         });
 
-        return oauth2User; // Return original or wrap it if needed
+        return oauth2User;
     }
 }

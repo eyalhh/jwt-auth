@@ -20,10 +20,9 @@ public class JwtService {
     private final SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
 
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(String email) {
         return Jwts.builder()
-                .subject(userDetails.getUsername())
-                .claim("authorities", userDetails.getAuthorities())
+                .subject(email)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRED_IN * 60 * 1000))
                 .signWith(key)

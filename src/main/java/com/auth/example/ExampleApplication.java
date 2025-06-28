@@ -17,6 +17,9 @@ public class ExampleApplication {
 		System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
 		System.setProperty("GITHUB_CLIENT_ID", dotenv.get("GITHUB_CLIENT_ID"));
 		System.setProperty("GITHUB_CLIENT_SECRET", dotenv.get("GITHUB_CLIENT_SECRET"));
+		System.setProperty("GOOGLE_CLIENT_ID", dotenv.get("GOOGLE_CLIENT_ID"));
+		System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET"));
+
 
 		SpringApplication.run(ExampleApplication.class, args);
 	}

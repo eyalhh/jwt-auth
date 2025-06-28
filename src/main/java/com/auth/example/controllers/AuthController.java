@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/auth")
@@ -38,7 +39,7 @@ public class AuthController {
         if (!user.getEmailValidated()) {
             return ResponseEntity.badRequest().build();
         }
-        String jwt = jwtService.generateToken(userDetails);
+        String jwt = jwtService.generateToken(user.getEmail());
         return ResponseEntity.ok(new AuthResponse(jwt));
     }
 
@@ -62,8 +63,7 @@ public class AuthController {
         Integer numericCode = Integer.parseInt(code);
 
         if (verificationService.verifyCode(request.email(), numericCode)) {
-            User user = User.builder().email(request.email()).build();
-            String jwt = jwtService.generateToken(new MyUserDetails(user));
+            String jwt = jwtService.generateToken(request.email());
             return ResponseEntity.ok(new AuthResponse(jwt));
         }
         return ResponseEntity.badRequest().build();
@@ -74,4 +74,17 @@ public class AuthController {
         verificationService.generateRandomCode(request.email());
         return ResponseEntity.ok().build();
     }
+
+    @RequestMapping("/oauth-success")
+    public ResponseEntity<?> oauthSuccess(Authentication authentication) {
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        if (oAuth2User == null) return ResponseEntity.badRequest().build();
+        String email = oAuth2User.getAttribute("email");
+
+        String jwt = jwtService.generateToken(email);
+
+        return ResponseEntity.ok(new AuthResponse(jwt));
+
+    }
+
 }

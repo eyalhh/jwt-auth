@@ -34,6 +34,10 @@ public class User {
     private Boolean emailValidated;
 
     @Getter
+    @Setter
+    private String provider;
+
+    @Getter
     @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks = new ArrayList<>();
 

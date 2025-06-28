@@ -2,6 +2,8 @@ package com.auth.example.config;
 
 import com.auth.example.filters.JwtFilter;
 import com.auth.example.models.User;
+import com.auth.example.repos.UserRepository;
+import com.auth.example.services.MyOAuth2UserService;
 import com.auth.example.services.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +17,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -24,24 +29,32 @@ public class SecurityConfig {
 
     @Autowired private MyUserDetailsService userDetailsService;
     @Autowired private JwtFilter jwtAuthFilter;
+    @Autowired private MyOAuth2UserService myOAuth2UserService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**")
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated()
+                        .requestMatchers("/auth/**", "/login", "/oauth2/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .oauth2Login(Customizer.withDefaults())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Allow sessions for OAuth2
+                )
+                .oauth2Login(oauth -> oauth
+                        .defaultSuccessUrl("/auth/oauth-success", true) // You control the redirect
+                        .userInfoEndpoint()
+                                .userService(myOAuth2UserService) // <-- Your custom logic
+
+                )
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -52,5 +65,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
+
+
 
 }
