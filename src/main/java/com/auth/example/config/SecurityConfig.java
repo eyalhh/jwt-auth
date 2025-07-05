@@ -42,12 +42,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Allow sessions for OAuth2
                 )
-                .oauth2Login(oauth -> oauth
-                        .defaultSuccessUrl("/auth/oauth-success", true) // You control the redirect
-                        .userInfoEndpoint()
-                                .userService(myOAuth2UserService) // <-- Your custom logic
-
-                )
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -37,7 +37,7 @@ public class AuthController {
         User user = userDetails.getUser();
 
         if (!user.getEmailValidated()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(403).build();
         }
         String jwt = jwtService.generateToken(user.getEmail());
         return ResponseEntity.ok(new AuthResponse(jwt));
@@ -46,7 +46,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody AuthRequest request) {
         User existingUser = userService.getUserByEmail(request.getEmail());
-        if (existingUser != null) return ResponseEntity.badRequest().build();
+        if (existingUser != null) return ResponseEntity.status(422).build();
         User user = User.builder().password(request.getPassword()).email(request.getEmail()).emailValidated(false).build();
         userService.createUser(user);
         return ResponseEntity.ok(user);
